@@ -1,0 +1,19 @@
+{
+  "name": "srdmodelparserthing",
+  "version": "1.0.0",
+  "description": "Parsing the SRD file and very messily moving points for another character",
+  "main": "vtxblockparser.ts",
+  "dependencies": {
+    "@types/node": "^17.0.0",
+    "@types/typescript": "^2.0.0",
+    "encoding-japanese": "^1.0.30",
+    "plotly": "^1.0.6",
+    "typings": "^2.1.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
