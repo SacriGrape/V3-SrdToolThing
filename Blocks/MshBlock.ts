@@ -1,92 +1,79 @@
+import { read, writeFileSync } from "fs";
+import { CompareArrays, CompareBuffers } from "../Utils/CompareBuffers";
 import { CustomBuffer } from "../Utils/CustomBuffer"
 import { Block } from "./block"
 
 export class MshBlock extends Block {
-    Unknown10: number
-    VertexBlockNameOffset: number
-    MaterialNameOffset: number
-    unknownStringOffset: number
-    Unknown1A: number
-    Unknown1C: number
-    StringMapDataAlmostEndOffset: number
-    Unknown20: number
-    Unknown21: number
-    Unknown22: number
-    Unknown23: number
-    VertexBlockName: string
-    MaterialName: string
-    UnknownString: string
-    MappedStrings: string[] = []
-    strOff: number
+    Unknown00: number;
+    UnknownStringIdOffset: number;
+    UnknownStringId: string
+    LambertStringOffset: number;
+    LambertString: string;
+    AlphaLayerStringOffset: number;
+    AlphaLayerString: string;
+    FirstStrOffsetOffset: number;
+    StrOffsets: number[] = [];
+    mappedStrings: string[] = []
+    UnknownByte1: number
+    UnknownByte2: number
+    MappedStringCount: number
+    UnknownByte4: number
 
 
     Deserialize(data: CustomBuffer, srdiPath: string, srdvPath: string) {
-        this.Unknown10 = data.readUInt32()
-        this.VertexBlockNameOffset = data.readUInt16()
-        this.MaterialNameOffset = data.readUInt16()
-        this.unknownStringOffset = data.readUInt16()
-        this.Unknown1A = data.readUInt16()
-        this.Unknown1C = data.readUInt16()
-        this.StringMapDataAlmostEndOffset = data.readUInt16()
-        this.Unknown20 = data.readByte()
-        this.Unknown21 = data.readByte()
-        this.Unknown22 = data.readByte()
-        this.Unknown23 = data.readByte()
+        writeFileSync("testData.bin", data.BaseBuffer)
+        this.Unknown00 = data.readInt32()
+        this.UnknownStringIdOffset = data.readInt16() 
+        this.LambertStringOffset = data.readInt16()
+        this.AlphaLayerStringOffset = data.readInt16()
+        data.readInt16() // Seems like it points to the start of StrOffsets but that is kind of redundant considering I don't think it has anything to do with the amount of them
+        data.readInt16() // Unknown short, seems to have some link to the short before it, though unsure what that link is
+        data.readInt16() // Unknown short, seems to have some link to the second StrOff or the First string (regardless of number of strOffsets?)
+        this.UnknownByte1 = data.readByte() // Handles lightmap or something
+        this.UnknownByte2 = data.readByte() // handles 
+        this.MappedStringCount = data.readByte() // handles number of 
+        this.UnknownByte4 = data.readByte() // Unknown use?
 
-        while (data.offset < (this.StringMapDataAlmostEndOffset + 4)) {
-            this.strOff = data.readUInt16()
+        var strOffCount = 0
+        switch(this.UnknownByte1) {
+            case 0:
+                strOffCount += 0
+                break
+            case 1:
+                strOffCount += 1
+                break
+            default:
+                console.log("FOUND NEW COMBO FOR BYTE1: ", this.UnknownByte1)
+        }
+
+        switch(this.UnknownByte2) {
+            case 1:
+                strOffCount += 0
+                break
+            case 2:
+                strOffCount += 1
+                break
+            default:
+                console.log("FOUND NEW COMBO FOR BYTE2: ", this.UnknownByte2)
+        }
+
+        strOffCount += (this.MappedStringCount * 2) + 1
+
+        for (var i = 0; i < strOffCount; i++) {
+            var strOffset = data.readInt16()
+            this.StrOffsets.push(strOffset)
             var oldPos = data.offset
-            data.offset = this.strOff
-            this.MappedStrings.push(data.readString())
+            data.offset = strOffset
+            var readString = data.readString()
+            this.mappedStrings.push(readString)
             data.offset = oldPos
         }
 
-        data.offset = this.VertexBlockNameOffset
-        this.VertexBlockName = data.readString()
-        data.offset = this.MaterialNameOffset
-        this.MaterialName = data.readString()
-        data.offset = this.unknownStringOffset
-        this.UnknownString = data.readString()
-    }
-
-    Serialize(size: number, srdi: string, srdv: string): CustomBuffer {
-        var buffer = new CustomBuffer(size)
-        buffer.writeInt32(this.Unknown10)
-        buffer.writeUInt16(this.VertexBlockNameOffset)
-        buffer.writeUInt16(this.MaterialNameOffset)
-        buffer.writeUInt16(this.unknownStringOffset)
-        buffer.writeUInt16(this.Unknown1A)
-        buffer.writeUInt16(this.Unknown1C)
-        buffer.writeUInt16(this.StringMapDataAlmostEndOffset)
-        buffer.writeByte(this.Unknown20)
-        buffer.writeByte(this.Unknown21)
-        buffer.writeByte(this.Unknown22)
-        buffer.writeByte(this.Unknown23)
-
-        for (var i = 0; i < this.MappedStrings.length; i++) {
-            buffer.writeUInt16(this.strOff)
-            var oldPos = buffer.offset
-            buffer.offset = this.strOff
-            buffer.writeString(this.MappedStrings[i])
-            buffer.offset = oldPos
-        }
-
-        buffer.offset = this.VertexBlockNameOffset
-        buffer.writeString(this.VertexBlockName)
-        buffer.offset = this.MaterialNameOffset
-        buffer.writeString(this.MaterialName)
-        buffer.offset = this.unknownStringOffset
-        buffer.writeString(this.UnknownString)
-
-        buffer.offset = 0
-        return buffer
-    }
-
-    GetInfo(): String {
-        return `Block Type ${this.blockType}\n` + 
-            `Vertex Block Name: ${this.VertexBlockName}\n` +
-            `Material Name: ${this.MaterialName}\n` +
-            `Unknown String: ${this.UnknownString}\n` +
-            `Mapped Strings: ${this.MappedStrings}\n`
+        data.offset = this.UnknownStringIdOffset
+        this.UnknownStringId = data.readString()
+        data.offset = this.LambertStringOffset
+        this.LambertString = data.readString()
+        data.offset = this.AlphaLayerStringOffset
+        this.AlphaLayerString = data.readString()
     }
 }

@@ -34,12 +34,17 @@ export class VtxBlock extends Block {
     unknownShortList: number[] = []
     boneNameOffsets: number[] = []
     unknownFloatList: number[] = []
+    UnknownStrings: string[] = []
 
     Deserialize(data: CustomBuffer, srdiPath: string, srdvPath: string) {
+        var isCorrectVTX = false
         this.VectorCount = data.readInt32()
         this.Unknown14 = data.readInt16()
         this.MeshType = data.readInt16()
         this.VertexCount = data.readInt32()
+        if (this.VertexCount == 9155) {
+            isCorrectVTX = true
+        }
         this.Unknown1C = data.readInt16()
         this.Unknown1E = data.readByte()
         this.vertexSubBlockCount = data.readByte()
@@ -70,17 +75,14 @@ export class VtxBlock extends Block {
         while (data.offset < this.unknownFloatListOffset) {
             var boneNameOffset = data.readUInt16()
             this.boneNameOffsets.push(boneNameOffset)
-            console.log(data.offset)
 
             if (boneNameOffset == 0) {
-                console.log("BREAKING")
                 break;
             }
 
             var oldPos = data.offset
             data.offset = boneNameOffset
             var readString = data.readString()
-            console.log(readString)
             this.BindBoneList.push(readString)
             data.offset = oldPos
         }
@@ -90,6 +92,10 @@ export class VtxBlock extends Block {
             this.unknownFloatList.push(data.readFloat32())
             this.unknownFloatList.push(data.readFloat32())
             this.unknownFloatList.push(data.readFloat32())
+        }
+
+        while (data.offset < data.BaseBuffer.length) {
+            this.UnknownStrings.push(data.readString())
         }
     }
 

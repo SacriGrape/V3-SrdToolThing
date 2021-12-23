@@ -1,4 +1,4 @@
-import { writeFileSync } from "fs";
+import { appendFileSync, readFileSync, writeFile, writeFileSync } from "fs";
 import { Block } from "./Blocks/block";
 import { MatBlock } from "./Blocks/MatBlock";
 import { MshBlock } from "./Blocks/MshBlock";
@@ -11,32 +11,16 @@ import { VtxBlock } from "./Blocks/VtxBlock";
 import { SrdFile } from "./SrdFile";
 import { CloneBlock } from "./Utils/CloneBlock";
 import { CompareBlocks } from "./Utils/CompareBlocks";
+import { CustomBuffer } from "./Utils/CustomBuffer";
 import { ChangeMeshes, GetMaterials, GetMeshes } from "./VertexReader";
 
-var plotly = require('plotly')("SacriPudding", "7hoiRWFuameWaTJMbp4l")
+var srdDataOld = readFileSync("C:\\Users\\evan6\\Downloads\\DRV3-Sharp_overhaul2_Release_2021-12-18 (1)\\model.srd")
+var newSrdFile = new SrdFile();
+var srdData = new CustomBuffer(srdDataOld.length, srdDataOld);
+newSrdFile.readBlocks(srdData, "", "")
 
-var file = new SrdFile
-
-var path = "C:\\Users\\evan6\\Desktop\\testModel\\model.srd"
-
-file.loadFromPath(path, path + "i", path + "v")
-var block = file.blocks.find(b => b.blockType == "$VTX") as VtxBlock
-
-writeFileSync("block.json", JSON.stringify(block, null, 2))
-
-var materials = GetMaterials(file)
-var meshes = GetMeshes(file, materials)
-
-var obj = ""
-for (var meshData of meshes) {
-    for (var vertex of meshData.Vertices) {
-        obj += `v ${vertex.x} ${vertex.y} ${vertex.z}\n`
-    }
-    for (var indice of meshData.Indices) {
-        obj += `f ${indice[0] + 1}/${indice[1] + 1}/${indice[2] + 1}`
+for (var block of newSrdFile.blocks) {
+    if (block.blockType == "$MSH") {
+        appendFileSync(`./BlockJsons/${block.UnknownByte1}${block.UnknownByte2}${block.UnknownByte3}${block.UnknownByte4}.json`, JSON.stringify(block, null, 4) + ",\n")
     }
 }
-
-var newFile = file.writeBlocks(file.size, path + "v", path + "i", file.writingInfo, 0)
-
-writeFileSync(path, newFile.BaseBuffer)

@@ -112,11 +112,10 @@ export class CustomBuffer {
 
     readShiftJisString(): String {
         var bytes = []
-        var buffer = this.readBuffer(32)
-        this.offset -= 32
         while (true) {
-            bytes.push(buffer.readByte())
-            if (bytes[bytes.length - 1] == 0) {
+            var lastByte = this.readByte()
+            bytes.push(lastByte)
+            if (lastByte == 0) {
                 break
             }
         }
