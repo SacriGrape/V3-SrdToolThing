@@ -1,5 +1,5 @@
 *.js
 *.bin
 *.srd
-./sprites/*
+./sprites/*.bmp
 ./BlockJsons/*
