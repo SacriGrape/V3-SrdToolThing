@@ -1,0 +1,24 @@
+{
+  "Children": [],
+  "StrOffsets": [
+    34
+  ],
+  "MappedStrings": [
+    "map1"
+  ],
+  "blockType": "$MSH",
+  "Unknown00": 3,
+  "ResourceNameOffset": 39,
+  "LambertStringOffset": 23,
+  "AlphaLayerStringOffset": 22,
+  "FirstStrOffsetOffset": 20,
+  "FirstMap1OffsetOffset": 20,
+  "FirstMappedStringOffsetOffset": 22,
+  "HasColorSet": 0,
+  "HasLightMap": 1,
+  "MappedStringCount": 0,
+  "Unknown13": 1,
+  "ResourceName": "pPipeShape108:lambert120",
+  "LambertString": "lambert120",
+  "AlphaLayerString": ""
+}

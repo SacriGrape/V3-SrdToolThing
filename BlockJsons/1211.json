@@ -1,0 +1,32 @@
+{
+  "Children": [],
+  "StrOffsets": [
+    41,
+    108,
+    99,
+    31,
+    108
+  ],
+  "MappedStrings": [
+    "colorSet1",
+    "map1",
+    "lightmap",
+    "COLORMAP0",
+    "map1"
+  ],
+  "blockType": "$MSH",
+  "Unknown00": 3,
+  "ResourceNameOffset": 51,
+  "LambertStringOffset": 113,
+  "AlphaLayerStringOffset": 30,
+  "FirstStrOffsetOffset": 20,
+  "FirstMap1OffsetOffset": 22,
+  "FirstMappedStringOffsetOffset": 26,
+  "HasColorSet": 1,
+  "HasLightMap": 2,
+  "MappedStringCount": 1,
+  "Unknown13": 1,
+  "ResourceName": "group957Shape1:set_1028_uraniwa_kabe_lambert426",
+  "LambertString": "set_1028_uraniwa_kabe_lambert426",
+  "AlphaLayerString": ""
+}

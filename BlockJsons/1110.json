@@ -1,0 +1,30 @@
+{
+  "Children": [],
+  "StrOffsets": [
+    39,
+    144,
+    29,
+    144
+  ],
+  "MappedStrings": [
+    "colorSet1",
+    "map1",
+    "COLORMAP0",
+    "map1"
+  ],
+  "blockType": "$MSH",
+  "Unknown00": 3,
+  "ResourceNameOffset": 66,
+  "LambertStringOffset": 49,
+  "AlphaLayerStringOffset": 28,
+  "FirstStrOffsetOffset": 20,
+  "FirstMap1OffsetOffset": 22,
+  "FirstMappedStringOffsetOffset": 24,
+  "HasColorSet": 1,
+  "HasLightMap": 1,
+  "MappedStringCount": 1,
+  "Unknown13": 0,
+  "ResourceName": "makaB_m_2|makaB_m_main1|makaB_m_main1_4|makaB_m_main1_Shape4:machine_lambert6",
+  "LambertString": "machine_lambert6",
+  "AlphaLayerString": ""
+}

@@ -174,6 +174,6 @@ export class TreBlock extends Block {
 
 
     GetInfo(): String {
-        return `Block Type ${this.blockType}\nRoot Node: ${this.RootNode.StringValue}\n`
+        return `Block Type ${this.BlockType}\nRoot Node: ${this.RootNode.StringValue}\n`
     }
 }

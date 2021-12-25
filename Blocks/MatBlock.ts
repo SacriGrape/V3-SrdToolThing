@@ -72,6 +72,6 @@ export class MatBlock extends Block {
     }
 
     GetInfo(): String {
-        return `Block Type ${this.blockType}\nMap Texture Pairs: ${this.MapTexturePairs}\n`
+        return `Block Type ${this.BlockType}\nMap Texture Pairs: ${this.MapTexturePairs}\n`
     }
 }

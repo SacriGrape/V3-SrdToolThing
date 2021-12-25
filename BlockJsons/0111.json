@@ -1,0 +1,28 @@
+{
+  "Children": [],
+  "StrOffsets": [
+    96,
+    27,
+    96
+  ],
+  "MappedStrings": [
+    "map1",
+    "COLORMAP0",
+    "map1"
+  ],
+  "blockType": "$MSH",
+  "Unknown00": 3,
+  "ResourceNameOffset": 49,
+  "LambertStringOffset": 37,
+  "AlphaLayerStringOffset": 26,
+  "FirstStrOffsetOffset": 20,
+  "FirstMap1OffsetOffset": 20,
+  "FirstMappedStringOffsetOffset": 22,
+  "HasColorSet": 0,
+  "HasLightMap": 1,
+  "MappedStringCount": 1,
+  "Unknown13": 1,
+  "ResourceName": "fenceA_circle1|fenceA_circleShape1:ct_saku_00c",
+  "LambertString": "ct_saku_00c",
+  "AlphaLayerString": ""
+}

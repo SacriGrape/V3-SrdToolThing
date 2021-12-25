@@ -1,0 +1,34 @@
+{
+  "Children": [],
+  "StrOffsets": [
+    112,
+    103,
+    33,
+    103,
+    43,
+    112
+  ],
+  "MappedStrings": [
+    "map1",
+    "lightmap",
+    "COLORMAP0",
+    "lightmap",
+    "COLORMAP1",
+    "map1"
+  ],
+  "blockType": "$MSH",
+  "Unknown00": 3,
+  "ResourceNameOffset": 69,
+  "LambertStringOffset": 53,
+  "AlphaLayerStringOffset": 32,
+  "FirstStrOffsetOffset": 20,
+  "FirstMap1OffsetOffset": 20,
+  "FirstMappedStringOffsetOffset": 24,
+  "HasColorSet": 0,
+  "HasLightMap": 2,
+  "MappedStringCount": 2,
+  "Unknown13": 1,
+  "ResourceName": "ID151_wall_Shape1:Dojo_Wall03_mtl",
+  "LambertString": "Dojo_Wall03_mtl",
+  "AlphaLayerString": ""
+}

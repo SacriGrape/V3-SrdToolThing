@@ -1,0 +1,39 @@
+{
+  "Children": [],
+  "StrOffsets": [
+    87,
+    97,
+    102,
+    107,
+    97,
+    117,
+    97,
+    127,
+    97
+  ],
+  "MappedStrings": [
+    "colorSet1",
+    "map1",
+    "map2",
+    "COLORMAP0",
+    "map1",
+    "COLORMAP1",
+    "map1",
+    "COLORMAP2",
+    "map1"
+  ],
+  "Unknown00": 3,
+  "ResourceNameOffset": 38,
+  "LambertStringOffset": 71,
+  "AlphaLayerStringOffset": 86,
+  "FirstStrOffsetOffset": 20,
+  "FirstMap1OffsetOffset": 22,
+  "FirstMappedStringOffsetOffset": 26,
+  "HasColorSet": 1,
+  "HasLightMap": 2,
+  "MappedStringCount": 3,
+  "Unknown13": 1,
+  "ResourceName": "upper_cleanShape0:ID249_ground_1",
+  "LambertString": "ID249_ground_1",
+  "AlphaLayerString": ""
+}

@@ -160,7 +160,7 @@ export class VtxBlock extends Block {
     }
 
     GetInfo() {
-        var info = `Block Type ${this.blockType}\n`
+        var info = `Block Type ${this.BlockType}\n`
         info += `Vector Count: ${this.VectorCount}\n`
         info += `Mesh Type: ${this.MeshType}\n`
         info += `Vertex Count: ${this.VertexCount}\n`

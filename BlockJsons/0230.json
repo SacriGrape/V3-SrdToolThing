@@ -1,0 +1,38 @@
+{
+  "Children": [],
+  "StrOffsets": [
+    145,
+    136,
+    37,
+    136,
+    47,
+    145,
+    119,
+    145
+  ],
+  "MappedStrings": [
+    "map1",
+    "lightmap",
+    "COLORMAP0",
+    "lightmap",
+    "COLORMAP1",
+    "map1",
+    "TRANSPARENCYMAP0",
+    "map1"
+  ],
+  "blockType": "$MSH",
+  "Unknown00": 3,
+  "ResourceNameOffset": 79,
+  "LambertStringOffset": 57,
+  "AlphaLayerStringOffset": 36,
+  "FirstStrOffsetOffset": 20,
+  "FirstMap1OffsetOffset": 20,
+  "FirstMappedStringOffsetOffset": 24,
+  "HasColorSet": 0,
+  "HasLightMap": 2,
+  "MappedStringCount": 3,
+  "Unknown13": 0,
+  "ResourceName": "ID151_roof_4Shape:Dojo_Roof01_alpha_mtl",
+  "LambertString": "Dojo_Roof01_alpha_mtl",
+  "AlphaLayerString": ""
+}

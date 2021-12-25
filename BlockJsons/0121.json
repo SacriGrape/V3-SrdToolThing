@@ -1,0 +1,32 @@
+{
+  "Children": [],
+  "StrOffsets": [
+    164,
+    31,
+    164,
+    41,
+    164
+  ],
+  "MappedStrings": [
+    "map1",
+    "COLORMAP0",
+    "map1",
+    "TRANSPARENCYMAP0",
+    "map1"
+  ],
+  "blockType": "$MSH",
+  "Unknown00": 3,
+  "ResourceNameOffset": 58,
+  "LambertStringOffset": 153,
+  "AlphaLayerStringOffset": 30,
+  "FirstStrOffsetOffset": 20,
+  "FirstMap1OffsetOffset": 20,
+  "FirstMappedStringOffsetOffset": 22,
+  "HasColorSet": 0,
+  "HasLightMap": 1,
+  "MappedStringCount": 2,
+  "Unknown13": 1,
+  "ResourceName": "gate_2|group2170|polySurface2700002003817585253|polySurfaceShape2700002003817585253:lambert663",
+  "LambertString": "lambert663",
+  "AlphaLayerString": ""
+}

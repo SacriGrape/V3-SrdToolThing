@@ -53,9 +53,9 @@ export function GetMaterials(srd: SrdFile) {
     var matBlocks: MatBlock[] = []
     var txiBlocks: TxiBlock[] = []
     for (var block of srd.blocks) {
-        if (block.blockType == "$MAT") {
+        if (block.BlockType == "$MAT") {
             matBlocks.push(block)
-        } else if (block.blockType == "$TXI") {
+        } else if (block.BlockType == "$TXI") {
             txiBlocks.push(block)
         }
     }
@@ -112,11 +112,11 @@ export function GetMeshes(srd: SrdFile, materials: Material[]) {
     var mshBlocks: MshBlock[] = [] // Mesh data, NEEDED
 
     for (var block of srd.blocks) {
-        if (block.blockType == "$SKL") {
+        if (block.BlockType == "$SKL") {
             sklBlocks.push(block)
-        } else if (block.blockType == "$VTX") {
+        } else if (block.BlockType == "$VTX") {
             vtxBlocks.push(block)
-        } else if (block.blockType == "$MSH") {
+        } else if (block.BlockType == "$MSH") {
             mshBlocks.push(block)
         }
     }
@@ -199,7 +199,7 @@ export function ChangeMeshes(oldSrd: SrdFile, meshInfo: MeshData): SrdFile {
     var vtxBlocks: {VtxBlock, index}[] = []
 
     for (var block of oldSrd.blocks) {
-        if (block.blockType == "$VTX") {
+        if (block.BlockType == "$VTX") {
             vtxBlocks.push({VtxBlock: block, index:oldSrd.blocks.indexOf(block)})
         }
     }

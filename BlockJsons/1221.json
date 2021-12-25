@@ -1,0 +1,36 @@
+{
+  "Children": [],
+  "StrOffsets": [
+    112,
+    131,
+    122,
+    35,
+    122,
+    45,
+    131
+  ],
+  "MappedStrings": [
+    "colorSet1",
+    "map1",
+    "lightmap",
+    "COLORMAP0",
+    "lightmap",
+    "COLORMAP1",
+    "map1"
+  ],
+  "blockType": "$MSH",
+  "Unknown00": 3,
+  "ResourceNameOffset": 55,
+  "LambertStringOffset": 136,
+  "AlphaLayerStringOffset": 34,
+  "FirstStrOffsetOffset": 20,
+  "FirstMap1OffsetOffset": 22,
+  "FirstMappedStringOffsetOffset": 26,
+  "HasColorSet": 1,
+  "HasLightMap": 2,
+  "MappedStringCount": 2,
+  "Unknown13": 1,
+  "ResourceName": "antena_A_06|polySurface9163|polySurfaceShape9163:wall_03",
+  "LambertString": "wall_03",
+  "AlphaLayerString": ""
+}

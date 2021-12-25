@@ -28,6 +28,6 @@ export class RsfBlock extends Block {
     }
 
     GetInfo(): String {
-        return `Block Type ${this.blockType}\nFolder Name: ${this.FolderName}\n`
+        return `Block Type ${this.BlockType}\nFolder Name: ${this.FolderName}\n`
     }
 }

@@ -164,7 +164,7 @@ export class RsiBlock extends Block {
     }
 
     GetInfo(): String {
-        var info = `Block Type ${this.blockType}\n`
+        var info = `Block Type ${this.BlockType}\n`
         info += `FallbackResourceInfoCount: ${this.FallbackResourceInfoCount}\n`
         info += `ResourceInfoCount: ${this.ResourceInfoCount}\n`
         info += `FallbackResourceInfoSize: ${this.FallbackResourceInfoSize}\n`

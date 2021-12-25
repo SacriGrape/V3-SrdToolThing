@@ -53,7 +53,7 @@ export class TxrBlock extends Block {
     }
 
     GetInfo(): String {
-        var info = `Block Type ${this.blockType}\n`
+        var info = `Block Type ${this.BlockType}\n`
         info += `Swizzle: ${this.Swizzle}\n`
         info += `Display Width: ${this.DisplayWidth}\n`
         info += `Display Height: ${this.DisplayHeight}\n`

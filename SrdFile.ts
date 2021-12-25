@@ -27,27 +27,60 @@ export class SrdFile {
 
     readBlocks(data: CustomBuffer, srdiPath: string, srdvPath: string) {
         while (data.offset < data.BaseBuffer.length) {
-            var blockType = data.readArrayAsString(4)
+            var BlockType = data.readArrayAsString(4)
             var blockSize = data.readInt32BE()
             var subdataSize = data.readInt32BE()
             var unknown0C = data.readInt32BE()
 
-            if (blockType != "$MSH") {
-                data.offset += blockSize
+            if (BlockType != "$MSH") {
+                var block = new Block()
+                block.BlockType = BlockType
+                block.Unknown0C = unknown0C
+                block.Data = data.readBuffer(blockSize)
                 data.readPadding(16)
-                data.offset += subdataSize
+                block.SubData = data.readBuffer(subdataSize)
                 data.readPadding(16)
+                this.blocks.push(block)
                 continue
             }
             var mshBlock = new MshBlock()
-            mshBlock.blockType = blockType
+            mshBlock.BlockType = BlockType
+            mshBlock.Size = blockSize
+            mshBlock.Unknown0C = unknown0C
             var blockData = data.readBuffer(blockSize)
             mshBlock.Deserialize(blockData, srdiPath, srdvPath)
+            mshBlock.Data = blockData
+            data.readPadding(16)
+            mshBlock.SubData = data.readBuffer(subdataSize)
+            data.readPadding(16)
             this.blocks.push(mshBlock)
-            data.readPadding(16)
-            data.offset += subdataSize
-            data.readPadding(16)
             continue
         }
+    }
+
+    writeBlocks(srdiPath: string, srdvPath: string) {
+        var size = 0
+        var data = new CustomBuffer(6144)
+        for (var block of this.blocks) {
+            data.writeArrayAsString(block.BlockType)
+            data.writeInt32BE(block.Data.BaseBuffer.length)
+            data.writeInt32BE(block.SubData.BaseBuffer.length)
+            data.writeInt32BE(block.Unknown0C)
+
+            if (block.BlockType != "$MSH") {
+                data.writeBuffer(block.Data)
+                data.readPadding(16)
+                data.writeBuffer(block.SubData)
+                data.readPadding(16)
+                continue
+            }
+
+            data.writeBuffer(block.Serialize("", ""))
+            data.readPadding(16)
+            data.writeBuffer(block.SubData)
+            data.readPadding(16)
+        }
+        data.offset = 0
+        return data
     }
 }

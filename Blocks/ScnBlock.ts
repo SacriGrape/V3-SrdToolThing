@@ -68,6 +68,6 @@ export class ScnBlock extends Block {
     }
 
     GetInfo(): String {
-        return `Block Type ${this.blockType}\nScene Root Nodes: ${this.SceneRootNodes}\n`
+        return `Block Type ${this.BlockType}\nScene Root Nodes: ${this.SceneRootNodes}\n`
     }
 }

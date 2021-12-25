@@ -11,6 +11,6 @@ export class CfhBlock extends Block {
     }
 
     GetInfo(): String {
-        return `Block Type: ${this.blockType}\n`
+        return `Block Type: ${this.BlockType}\n`
     }
 }

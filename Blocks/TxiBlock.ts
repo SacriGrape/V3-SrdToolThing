@@ -40,6 +40,6 @@ export class TxiBlock extends Block {
     }
 
     GetInfo(): String {
-        return `Block Type ${this.blockType}\nTexture Filename: ${this.TextureFilename}\n`
+        return `Block Type ${this.BlockType}\nTexture Filename: ${this.TextureFilename}\n`
     }
 }
