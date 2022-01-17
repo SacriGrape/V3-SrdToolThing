@@ -13,6 +13,8 @@ import { TreBlock } from './Blocks/TreBlock'
 import { MatBlock } from './Blocks/MatBlock'
 import { Block } from './Blocks/block'
 
+var tempExemps: string[] = ["$MSH", "$MAT"]
+
 export class SrdFile {
     blocks = []
     writingInfo: any[] = []
@@ -32,8 +34,9 @@ export class SrdFile {
             var subdataSize = data.readInt32BE()
             var unknown0C = data.readInt32BE()
 
-            if (BlockType != "$MSH") {
-                var block = new Block()
+            var block
+            if (!tempExemps.includes(BlockType)) {
+                block = new Block()
                 block.BlockType = BlockType
                 block.Unknown0C = unknown0C
                 block.Data = data.readBuffer(blockSize)
@@ -43,17 +46,23 @@ export class SrdFile {
                 this.blocks.push(block)
                 continue
             }
-            var mshBlock = new MshBlock()
-            mshBlock.BlockType = BlockType
-            mshBlock.Size = blockSize
-            mshBlock.Unknown0C = unknown0C
+            var block;
+            switch (BlockType) {
+                case "$MAT":
+                    block = new MatBlock
+                case "$MSH":
+                    block = new MshBlock
+            }
+            block.BlockType = BlockType
+            block.Size = blockSize
+            block.Unknown0C = unknown0C
             var blockData = data.readBuffer(blockSize)
-            mshBlock.Deserialize(blockData, srdiPath, srdvPath)
-            mshBlock.Data = blockData
+            block.Deserialize(blockData, srdiPath, srdvPath)
+            block.Data = blockData
             data.readPadding(16)
-            mshBlock.SubData = data.readBuffer(subdataSize)
+            block.SubData = data.readBuffer(subdataSize)
             data.readPadding(16)
-            this.blocks.push(mshBlock)
+            this.blocks.push(block)
             continue
         }
     }
@@ -67,14 +76,13 @@ export class SrdFile {
             data.writeInt32BE(block.SubData.BaseBuffer.length)
             data.writeInt32BE(block.Unknown0C)
 
-            if (block.BlockType != "$MSH") {
+            if (!tempExemps.includes(block.BlockType)) {
                 data.writeBuffer(block.Data)
                 data.readPadding(16)
                 data.writeBuffer(block.SubData)
                 data.readPadding(16)
                 continue
             }
-
             data.writeBuffer(block.Serialize("", ""))
             data.readPadding(16)
             data.writeBuffer(block.SubData)
