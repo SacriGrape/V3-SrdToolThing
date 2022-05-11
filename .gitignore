@@ -3,3 +3,4 @@
 *.srd
 ./sprites/*.bmp
 ./BlockJsons/*
+VertexReader.ts

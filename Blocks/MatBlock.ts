@@ -1,3 +1,4 @@
+import { writeFileSync } from "fs"
 import { CustomBuffer } from "../Utils/CustomBuffer"
 import { MapToArray } from "../Utils/MapToArray"
 import { Block } from "./block"
@@ -11,7 +12,7 @@ export class MatBlock extends Block {
     UnknownStringOffset1: number
     StringMapStartOffset: number
     StringMapCount: number
-    StringMap: [string, string][]
+    StringMap: [string, string][] = []
     UnknownStrings: [string, string]
 
     Deserialize(data: CustomBuffer, srdiPath: string, srdvPath: string) {
@@ -24,7 +25,7 @@ export class MatBlock extends Block {
         this.StringMapStartOffset = data.readUInt16()
         this.StringMapCount = data.readUInt16()
 
-        data.offset = this.StringMapCount
+        data.offset = this.StringMapStartOffset
         for (var i = 0; i < this.StringMapCount; i++) {
             var mapNameOffset = data.readUInt16()
             var textureNameOffset = data.readUInt16()
@@ -49,14 +50,21 @@ export class MatBlock extends Block {
     }
 
     Serialize(srdi: string, srdv: string): CustomBuffer {
-        var size = 18
+        var size = 24
 
         for (var i = 0; i < this.StringMap.length; i++) {
             var stringMap = this.StringMap[i]
             size += 4 + (stringMap[0].length + 1) + (stringMap[1].length + 1)
         }
 
-        size += (1 + this.UnknownStrings[0].length) + (1 + this.UnknownStrings[1].length) 
+        var unknownIsSame = false
+
+        if (this.UnknownStrings[0] == this.UnknownStrings[1]) {
+            size += (this.UnknownStrings[0].length + 1)
+            unknownIsSame = true
+        } else {
+            size += (this.UnknownStrings[1].length + 1) + (this.UnknownStrings[0].length + 1)
+        }
 
         var data = new CustomBuffer(size)
         data.writeInt32(this.Unknown10)
@@ -81,15 +89,25 @@ export class MatBlock extends Block {
             textureNameOffsets.push(data.offset)
             data.writeString(map[1])
         }
-
-        var unknownStringOffset0 = data.offset
-        data.writeString(this.UnknownStrings[0])
-        var unknownStringOffset1 = data.offset
-        data.writeString(this.UnknownStrings[1])
-
+        var unknownStringOffset0
+        var unknownStringOffset1
+        if (unknownIsSame) {
+            unknownStringOffset0 = data.offset
+            data.writeString(this.UnknownStrings[0])
+        } else {
+            unknownStringOffset0 = data.offset
+            data.writeString(this.UnknownStrings[0])
+            unknownStringOffset1 = data.offset
+            data.writeString(this.UnknownStrings[1])
+        }
+        
         data.offset = 16
         data.writeInt16(unknownStringOffset0)
-        data.writeInt16(unknownStringOffset1)
+        if (unknownIsSame) {
+            data.writeInt16(unknownStringOffset0)
+        } else {
+            data.writeInt16(unknownStringOffset1)
+        }
         data.writeInt16(stringMapStart)
         data.offset += 2
 
@@ -98,8 +116,10 @@ export class MatBlock extends Block {
             data.writeInt16(textureNameOffsets[i])
         }
 
-
         data.offset = 0
+        if (data.BaseBuffer.length == 55) {
+            writeFileSync("testMat.bin", data.BaseBuffer)
+        }
         return data
     }
 }

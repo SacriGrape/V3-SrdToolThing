@@ -1,4 +1,4 @@
-import {readFile, readFileSync, writeFileSync} from 'fs'
+import {readFile, readFileSync, writeFile, writeFileSync} from 'fs'
 import { CfhBlock } from './Blocks/CfhBlock'
 import { Ct0Block } from './Blocks/Ct0Block'
 import { CustomBuffer } from './Utils/CustomBuffer'
@@ -13,7 +13,7 @@ import { TreBlock } from './Blocks/TreBlock'
 import { MatBlock } from './Blocks/MatBlock'
 import { Block } from './Blocks/block'
 
-var tempExemps: string[] = ["$MSH", "$MAT"]
+var tempExemps: string[] = ["$MSH", "$MAT", "$VTX"]
 
 export class SrdFile {
     blocks = []
@@ -24,10 +24,11 @@ export class SrdFile {
         var buffer = readFileSync(path)
         var data = new CustomBuffer(buffer.length, buffer)
         this.size = buffer.length
-        this.readBlocks(data, srdiPath, srdvPath)
+        this.blocks = this.readBlocks(data, srdiPath, srdvPath)
     }
 
-    readBlocks(data: CustomBuffer, srdiPath: string, srdvPath: string) {
+    readBlocks(data: CustomBuffer, srdiPath: string, srdvPath: string): any[] {
+        let blocks: any[] = []
         while (data.offset < data.BaseBuffer.length) {
             var BlockType = data.readArrayAsString(4)
             var blockSize = data.readInt32BE()
@@ -43,15 +44,20 @@ export class SrdFile {
                 data.readPadding(16)
                 block.SubData = data.readBuffer(subdataSize)
                 data.readPadding(16)
-                this.blocks.push(block)
+                blocks.push(block)
                 continue
             }
             var block;
             switch (BlockType) {
                 case "$MAT":
                     block = new MatBlock
+                    break
                 case "$MSH":
                     block = new MshBlock
+                    break
+                case "$VTX":
+                    block = new VtxBlock
+                    break
             }
             block.BlockType = BlockType
             block.Size = blockSize
@@ -60,11 +66,14 @@ export class SrdFile {
             block.Deserialize(blockData, srdiPath, srdvPath)
             block.Data = blockData
             data.readPadding(16)
-            block.SubData = data.readBuffer(subdataSize)
+            var subData = data.readBuffer(subdataSize)
+            block.Children = this.readBlocks(subData, srdiPath, srdvPath)
+            block.SubData = subData
             data.readPadding(16)
-            this.blocks.push(block)
+            blocks.push(block)
             continue
         }
+        return blocks
     }
 
     writeBlocks(srdiPath: string, srdvPath: string) {
