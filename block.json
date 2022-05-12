@@ -1,0 +1,21 @@
+{
+  "Children": [],
+  "BlockType": "$CT0",
+  "Unknown0C": 0,
+  "Data": {
+    "BaseBuffer": {
+      "type": "Buffer",
+      "data": []
+    },
+    "offset": 0
+  },
+  "SubData": {
+    "BaseBuffer": {
+      "type": "Buffer",
+      "data": []
+    },
+    "offset": 0
+  },
+  "DataSize": 0,
+  "SubDataSize": 0
+}

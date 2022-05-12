@@ -79,11 +79,8 @@ export class MshBlock extends Block {
     }
 
     Serialize(srdiPath: string, srdvPath: string): CustomBuffer {
-        var size = 20
         var checkedStrs: string[] = []
 
-        size += this.MappedStrings.length * 2
-        
         var re: RegExp = /([A-Z])+([0-9]+)/g
         
         this.HasColorSet = 0
@@ -108,14 +105,12 @@ export class MshBlock extends Block {
             if(checkedStrs.includes(str)) {
                 continue
             }
-            
-            size += str.length + 1
+        
             checkedStrs.push(str)
         }
-        
-        size += (this.ResourceName.length + 1) + (this.LambertString.length + 1) +  (this.AlphaLayerString.length + 1)
 
-        var data = new CustomBuffer(size)
+        this.UpdateSize()
+        var data = new CustomBuffer(this.DataSize)
         data.writeInt32(3)
         data.offset += 12
         data.writeByte(this.HasColorSet)
@@ -202,4 +197,17 @@ export class MshBlock extends Block {
         return data
     }
 
+    UpdateSize() {
+        this.DataSize = 20
+        this.DataSize += this.MappedStrings.length * 2
+        this.DataSize += (this.ResourceName.length + 1) + (this.LambertString.length + 1) +  (this.AlphaLayerString.length + 1)
+
+        let checkedStrings = []
+        for (let string of this.MappedStrings) {
+            if (!checkedStrings.includes(string)) {
+                this.DataSize += string.length + 1
+                checkedStrings.push(string)
+            }
+        }
+    }
 }

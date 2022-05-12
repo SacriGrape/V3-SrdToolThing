@@ -15,6 +15,9 @@ export class MatBlock extends Block {
     StringMap: [string, string][] = []
     UnknownStrings: [string, string]
 
+    // Data thats used in write
+    UnknownIsSame: boolean
+
     Deserialize(data: CustomBuffer, srdiPath: string, srdvPath: string) {
         this.Unknown10 = data.readInt32()
         this.Unknown14 = data.readFloat32()
@@ -50,23 +53,8 @@ export class MatBlock extends Block {
     }
 
     Serialize(srdi: string, srdv: string): CustomBuffer {
-        var size = 24
-
-        for (var i = 0; i < this.StringMap.length; i++) {
-            var stringMap = this.StringMap[i]
-            size += 4 + (stringMap[0].length + 1) + (stringMap[1].length + 1)
-        }
-
-        var unknownIsSame = false
-
-        if (this.UnknownStrings[0] == this.UnknownStrings[1]) {
-            size += (this.UnknownStrings[0].length + 1)
-            unknownIsSame = true
-        } else {
-            size += (this.UnknownStrings[1].length + 1) + (this.UnknownStrings[0].length + 1)
-        }
-
-        var data = new CustomBuffer(size)
+        this.UpdateSize()
+        var data = new CustomBuffer(this.DataSize)
         data.writeInt32(this.Unknown10)
         data.writeFloat32(this.Unknown14)
         data.writeFloat32(this.Unknown18)
@@ -91,7 +79,7 @@ export class MatBlock extends Block {
         }
         var unknownStringOffset0
         var unknownStringOffset1
-        if (unknownIsSame) {
+        if (this.UnknownIsSame) {
             unknownStringOffset0 = data.offset
             data.writeString(this.UnknownStrings[0])
         } else {
@@ -103,7 +91,7 @@ export class MatBlock extends Block {
         
         data.offset = 16
         data.writeInt16(unknownStringOffset0)
-        if (unknownIsSame) {
+        if (this.UnknownIsSame) {
             data.writeInt16(unknownStringOffset0)
         } else {
             data.writeInt16(unknownStringOffset1)
@@ -121,5 +109,23 @@ export class MatBlock extends Block {
             writeFileSync("testMat.bin", data.BaseBuffer)
         }
         return data
+    }
+
+    UpdateSize() {
+        this.DataSize = 24
+
+        for (var i = 0; i < this.StringMap.length; i++) {
+            var stringMap = this.StringMap[i]
+            this.DataSize += 4 + (stringMap[0].length + 1) + (stringMap[1].length + 1)
+        }
+
+        this.UnknownIsSame = false
+
+        if (this.UnknownStrings[0] == this.UnknownStrings[1]) {
+            this.DataSize += (this.UnknownStrings[0].length + 1)
+            this.UnknownIsSame = true
+        } else {
+            this.DataSize += (this.UnknownStrings[1].length + 1) + (this.UnknownStrings[0].length + 1)
+        }
     }
 }

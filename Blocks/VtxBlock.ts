@@ -77,26 +77,8 @@ export class VtxBlock extends Block {
     }
 
     Serialize(srdiPath: string, srdvPath: string): CustomBuffer {
-        var size = 34
-
-        size += (this.UnknownShortList.length * 2)
-        
-        size += (this.VertexDataSections.length * 8)
-        
-        if (this.BindBoneList.length > 0) {
-            size += this.BindBoneList.length * 2
-            for (let string of this.BindBoneList) {
-                size += (string.length + 1)
-            }
-        } else {
-            size += 2
-        }
-
-        size += (this.UnknownFloatList.length * 12)
-        
-        size += (this.Unknownstring.length + 1)
-        
-        let data = new CustomBuffer(size)
+        this.UpdateSize()
+        let data = new CustomBuffer(this.DataSize)
 
         data.writeInt32(this.UnknownFloatList.length * 2)
         data.offset += 2 // Jumping Padding Offset
@@ -171,5 +153,27 @@ export class VtxBlock extends Block {
         
         data.offset = 0;
         return data
+    }
+
+    UpdateSize() {
+        this.DataSize = 34
+
+        this.DataSize += (this.UnknownShortList.length * 2)
+        
+        this.DataSize += (this.VertexDataSections.length * 8)
+        
+        if (this.BindBoneList.length > 0) {
+            this.DataSize += this.BindBoneList.length * 2
+            for (let string of this.BindBoneList) {
+                this.DataSize += (string.length + 1)
+            }
+        } else {
+            this.DataSize += 2
+        }
+
+        this.DataSize += (this.UnknownFloatList.length * 12)
+        
+        this.DataSize += (this.Unknownstring.length + 1)
+        
     }
 }

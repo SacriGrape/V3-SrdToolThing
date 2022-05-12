@@ -110,7 +110,7 @@ export class CustomBuffer {
         this.writeByte(0)
     }
 
-    readShiftJisString(): String {
+    readShiftJisString(): string {
         var bytes = []
         while (true) {
             var lastByte = this.readByte()
@@ -170,5 +170,10 @@ export class CustomBuffer {
     writeBuffer(buffer: CustomBuffer): void {
         buffer.BaseBuffer.copy(this.BaseBuffer, this.offset)
         this.offset += buffer.BaseBuffer.length
+    }
+
+    setOffset(value: number) {
+        //console.log("Setting offset to: ", value)
+        this.offset = value
     }
 }
