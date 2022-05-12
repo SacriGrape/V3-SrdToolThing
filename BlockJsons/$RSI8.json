@@ -1,0 +1,82 @@
+{
+  "Children": [],
+  "ResourceInfo": [
+    [
+      91,
+      48,
+      4,
+      65535
+    ],
+    [
+      80,
+      64,
+      4,
+      65535
+    ]
+  ],
+  "ResourceStringList": [
+    "(the-scene)",
+    "Op2MdlType",
+    "OpMdlVersion"
+  ],
+  "ResourceSubData": [
+    {
+      "Data": {
+        "BaseBuffer": {
+          "type": "Buffer",
+          "data": []
+        },
+        "offset": 0
+      },
+      "Location": "SRD",
+      "offset": 91
+    },
+    {
+      "Data": {
+        "BaseBuffer": {
+          "type": "Buffer",
+          "data": []
+        },
+        "offset": 0
+      },
+      "Location": "SRD",
+      "offset": 80
+    }
+  ],
+  "BlockType": "$RSI",
+  "Unknown0C": 0,
+  "UnknownByte00": 6,
+  "UnknownByte01": 5,
+  "UnknownByte02": 255,
+  "UnknownShort0A": 0,
+  "ResourceData": {
+    "BaseBuffer": {
+      "type": "Buffer",
+      "data": [
+        5,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "offset": 144
+  },
+  "DataSize": 104,
+  "SubDataSize": 0
+}

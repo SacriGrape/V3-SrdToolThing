@@ -1,4 +1,4 @@
-import { writeFile, writeFileSync } from "fs"
+/*import { writeFile, writeFileSync } from "fs"
 import { Block } from "./Blocks/block"
 import { MatBlock } from "./Blocks/MatBlock"
 import { MshBlock } from "./Blocks/MshBlock"
@@ -231,4 +231,4 @@ export function ChangeMeshes(oldSrd: SrdFile, meshInfo: MeshData): SrdFile {
     UpdatedSrd.blocks[vtx.index] = modvtx
 
     return UpdatedSrd
-}
+}*/

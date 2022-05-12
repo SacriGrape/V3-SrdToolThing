@@ -1,6 +1,8 @@
 *.js
 *.bin
 *.srd
+*.srdi
+*.srdv
 ./sprites/*.bmp
 ./BlockJsons/*.json
 VertexReader.ts

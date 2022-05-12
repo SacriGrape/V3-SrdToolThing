@@ -71,9 +71,6 @@ export class SrdFile {
             block.BlockType = BlockType
             block.Unknown0C = unknown0C
             var blockData = data.readBuffer(blockSize)
-            if (block.BlockType == "$RSI") {
-                block.Data = blockData
-            }
             block.Deserialize(blockData, srdiPath, srdvPath)
             data.readPadding(16)
             var subData = data.readBuffer(subdataSize)
@@ -87,7 +84,16 @@ export class SrdFile {
         return blocks
     }
 
-    writeBlocks(srdiPath: string, srdvPath: string, data?: CustomBuffer, children?: Block[]): CustomBuffer {
+    writeBlocks(srdiPath: string, srdvPath: string, data?: CustomBuffer, children?: Block[], srdxData?: {srdiData: CustomBuffer, srdvData: CustomBuffer}): {srdData: CustomBuffer, srdiData: CustomBuffer, srdvData: CustomBuffer} {
+        let srdiRawBuffer = readFileSync(srdiPath)
+        let srdvRawBuffer = readFileSync(srdvPath)
+        let srdiData = new CustomBuffer(srdiRawBuffer.length, srdiRawBuffer)
+        let srdvData = new CustomBuffer(srdvRawBuffer.length, srdvRawBuffer)
+        if (srdxData != null) {
+            srdiData = srdxData.srdiData
+            srdvData = srdxData.srdvData
+        }
+
         if (data == null) {
             data = new CustomBuffer(this.getSrdSize())
         }
@@ -97,69 +103,49 @@ export class SrdFile {
             blocks = children
         }
         for (var block of blocks) {
-            console.log("Before: ", data.offset)
-            console.log(block.BlockType)
-            // 24 43 54 30 00 00 00 00 00 00 00 00 00 00 00 00
-            data.writeArrayAsString(block.BlockType) // 24 43 54 30
-            data.setOffset(data.offset + 8) // 00 00 00 00 00 00 00 00
-            data.writeInt32BE(block.Unknown0C) // 00 00 00 00
+            data.writeArrayAsString(block.BlockType)
+            data.setOffset(data.offset + 8)
+            data.writeInt32BE(block.Unknown0C)
 
-            if (!tempExemps.includes(block.BlockType) || block.BlockType == "$RSI") {
-                if (block.BlockType != "$RSI") {
-                    data.setOffset(data.offset - 12)
-                    data.writeInt32BE(block.Data.BaseBuffer.length) // 00 00 00 00
-                    data.writeInt32BE(block.SubData.BaseBuffer.length) // 00 00 00 00
-                    data.setOffset(data.offset + 4)
-                    if (block.DataSize != 0) {
-                        data.writeBuffer(block.Data)
-                    }
-                    data.readPadding(16)
-                    if (block.SubDataSize != 0) {
-                        data.writeBuffer(block.SubData)
-                    }
-                    data.readPadding(16) // Nothing
-
-                    writeFileSync("block.json", JSON.stringify(block, null, 2))
-                    console.log("After: ", data.offset)
-                    continue
+            if (!tempExemps.includes(block.BlockType)) {
+                data.setOffset(data.offset - 12)
+                data.writeInt32BE(block.Data.BaseBuffer.length)
+                let subDataSizeOffset = data.offset
+                data.offset += 4
+                data.setOffset(data.offset + 4)
+                if (block.DataSize != 0) {
+                    data.writeBuffer(block.Data)
                 }
-
-                let sizePos = data.offset - 12
-                data.writeBuffer(block.Data)
                 data.readPadding(16)
                 let hasSubData = false
                 let subData = null
-                if (block.Children.length != 0) {
-                    subData = this.writeBlocks(srdiPath, srdvPath, data, block.Children)
-                    data.writeBuffer(subData)
+                if (block.SubDataSize != 0) {
+                    subData = this.writeBlocks(srdiPath, srdvPath, data, block.Children, {srdiData: srdiData, srdvData: srdvData}).srdData
                     data.readPadding(16)
                     hasSubData = true
                 }
-    
-                let oldPos = data.offset
-                data.setOffset(sizePos)
-                data.writeInt32BE(block.Data.length)
                 if (hasSubData) {
-                    data.writeInt32BE(subData.length)
-                } else {
-                    data.writeInt32BE(0)
+                    let oldPos = data.offset
+                    data.offset = subDataSizeOffset
+                    data.writeInt32BE(subData.BaseBuffer.length)
+                    data.offset = oldPos
                 }
-    
-                data.setOffset(oldPos)
+                data.readPadding(16) // Nothing
+
+                writeFileSync("block.json", JSON.stringify(block, null, 2))
                 continue
             }
-            let blockData = block.Serialize(srdiPath, srdvPath)
+            let blockData = block.Serialize(srdiData, srdvData)
             let sizePos = data.offset - 12
             data.writeBuffer(blockData)
             data.readPadding(16)
             let hasSubData = false
             let subData = null
             if (block.Children.length != 0) {
-                subData = this.writeBlocks(srdiPath, srdvPath, data, block.Children)
+                subData = this.writeBlocks(srdiPath, srdvPath, data, block.Children, {srdiData: srdiData, srdvData: srdvData}).srdData
                 data.readPadding(16)
                 hasSubData = true
             }
-            console.log(data.offset)
             let oldPos = data.offset
             data.setOffset(sizePos)
             data.writeInt32BE(blockData.length)
@@ -171,7 +157,7 @@ export class SrdFile {
 
             data.setOffset(oldPos)
         }
-        return data
+        return {srdData: data, srdiData: srdiData, srdvData: srdvData}
     }
 
     getSrdSize(children?: Block[]): number {
@@ -181,14 +167,6 @@ export class SrdFile {
         }
         var size = 0
         for (var block of blocks) {
-            if (block.Children.length > 0) {
-                //this.getSrdSize(block.Children)
-            }
-            if (tempExemps.includes(block.BlockType) && block.BlockType != "$RSI") {
-                //block.UpdateSize()
-                //size += 16
-            }
-
             size += 16
 
             size += block.DataSize

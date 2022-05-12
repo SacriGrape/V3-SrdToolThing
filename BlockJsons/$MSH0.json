@@ -1,0 +1,142 @@
+{
+  "Children": [
+    {
+      "Children": [],
+      "ResourceInfo": [],
+      "ResourceStringList": [
+        "|stand_000|stand_000_302|m_41:Chara_black"
+      ],
+      "ResourceSubData": [],
+      "BlockType": "$RSI",
+      "Unknown0C": 0,
+      "Data": {
+        "BaseBuffer": {
+          "type": "Buffer",
+          "data": [
+            6,
+            5,
+            255,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            16,
+            0,
+            0,
+            0,
+            124,
+            115,
+            116,
+            97,
+            110,
+            100,
+            95,
+            48,
+            48,
+            48,
+            124,
+            115,
+            116,
+            97,
+            110,
+            100,
+            95,
+            48,
+            48,
+            48,
+            95,
+            51,
+            48,
+            50,
+            124,
+            109,
+            95,
+            52,
+            49,
+            58,
+            67,
+            104,
+            97,
+            114,
+            97,
+            95,
+            98,
+            108,
+            97,
+            99,
+            107,
+            0
+          ]
+        },
+        "offset": 58
+      },
+      "UnknownByte00": 6,
+      "UnknownByte01": 5,
+      "UnknownByte02": 255,
+      "UnknownShort0A": 0,
+      "ResourceData": {
+        "BaseBuffer": {
+          "type": "Buffer",
+          "data": []
+        },
+        "offset": 0
+      },
+      "DataSize": 58,
+      "SubDataSize": 0
+    },
+    {
+      "Children": [],
+      "BlockType": "$CT0",
+      "Unknown0C": 0,
+      "Data": {
+        "BaseBuffer": {
+          "type": "Buffer",
+          "data": []
+        },
+        "offset": 0
+      },
+      "SubData": {
+        "BaseBuffer": {
+          "type": "Buffer",
+          "data": []
+        },
+        "offset": 0
+      },
+      "DataSize": 0,
+      "SubDataSize": 0
+    }
+  ],
+  "StrOffsets": [
+    71,
+    27,
+    71
+  ],
+  "MappedStrings": [
+    "map1",
+    "COLORMAP0",
+    "map1"
+  ],
+  "BlockType": "$MSH",
+  "Unknown0C": 0,
+  "Unknown00": 3,
+  "ResourceNameOffset": 49,
+  "LambertStringOffset": 37,
+  "AlphaLayerStringOffset": 26,
+  "FirstStrOffsetOffset": 20,
+  "FirstMap1OffsetOffset": 20,
+  "FirstMappedStringOffsetOffset": 22,
+  "HasColorSet": 0,
+  "HasLightMap": 1,
+  "MappedStringCount": 1,
+  "Unknown13": 0,
+  "ResourceName": "m_Shape41:Chara_black",
+  "LambertString": "Chara_black",
+  "AlphaLayerString": "",
+  "DataSize": 76,
+  "SubDataSize": 96
+}

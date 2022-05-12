@@ -1,0 +1,23 @@
+{
+  "Children": [],
+  "ResourceInfo": [],
+  "ResourceStringList": [
+    "|stand_000|stand_000_302|m_41:Chara_black"
+  ],
+  "ResourceSubData": [],
+  "BlockType": "$RSI",
+  "Unknown0C": 0,
+  "UnknownByte00": 6,
+  "UnknownByte01": 5,
+  "UnknownByte02": 255,
+  "UnknownShort0A": 0,
+  "ResourceData": {
+    "BaseBuffer": {
+      "type": "Buffer",
+      "data": []
+    },
+    "offset": 0
+  },
+  "DataSize": 58,
+  "SubDataSize": 0
+}

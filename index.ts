@@ -5,7 +5,8 @@ import { SrdFile } from "./SrdFile";
 var tempExemps: string[] = ["$MSH", "$MAT", "$VTX", "$RSI"]
 
 let fileNumber = 0
-let pathPrefix = "C:\\Users\\evan6\\Downloads\\DRV3-Sharp_overhaul2_Release_2021-12-18\\"
+let filterType = "$RSI"
+let pathPrefix = "C:\\Users\\evan6\\Documents\\DRV3-Sharp_overhaul2_Release_2021-12-18\\"
 let srdPath = pathPrefix + "model.srd"
 let srdiPath = pathPrefix + "model.srdi"
 let srdvPath = pathPrefix + "model.srdv"
@@ -13,14 +14,16 @@ let srdvPath = pathPrefix + "model.srdv"
 var srdFile = new SrdFile
 srdFile.loadFromPath(srdPath, srdiPath, srdvPath)
 //readSaveChildren(srdFile.blocks, "$RSI")
-let rsiBlocks = getBlocksOfType(srdFile.blocks, "$RSI")
+let rsiBlocks = getBlocksOfType(srdFile.blocks, filterType)
 let rsiBlocksClone = cloneBlockArray(rsiBlocks)
-readSaveChildren(srdFile.blocks, "$RSI")
+readSaveChildren(srdFile.blocks, filterType)
 updateSizes(rsiBlocks)
-compareSizes(rsiBlocks, rsiBlocksClone, "$RSI")
+compareSizes(rsiBlocks, rsiBlocksClone, filterType)
 //readSaveChildren(srdFile.blocks, "$RSI")
-//var data = srdFile.writeBlocks("", "")
-//writeFileSync("model.srd", data.BaseBuffer)
+var data = srdFile.writeBlocks(srdiPath, srdvPath)
+writeFileSync("model.srd", data.srdData.BaseBuffer)
+writeFileSync("model.srdi", data.srdiData.BaseBuffer)
+writeFileSync("model.srdv", data.srdvData.BaseBuffer)
 
 
 function readSaveChildren(Children: Block[], filterType: string) {
@@ -68,7 +71,6 @@ function updateSizes(Children: any[]) {
         }
 
         if (tempExemps.includes(child.BlockType)) {
-            console.log("Updating Size")
             child.UpdateSize()
         }
     }
@@ -84,7 +86,7 @@ function compareSizes(Children: Block[], Children2: Block[], filterType: string)
 
         if (child.BlockType == filterType) {
             if (child.DataSize != child2.DataSize) {
-                console.log(`${child.DataSize} VS ${child2.DataSize}`)
+                console.log(`${child.DataSize} Bytes VS ${child2.DataSize} Bytes`)
             }
         }
 
