@@ -1,0 +1,1 @@
+export let tempExemps: string[] = ["$MSH", "$MAT", "$VTX", "$RSI"]

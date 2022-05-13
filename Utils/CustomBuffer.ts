@@ -1,3 +1,5 @@
+import { readFileSync, writeFileSync } from "fs";
+
 var encoding = require('encoding-japanese');
 
 export class CustomBuffer {
@@ -12,6 +14,16 @@ export class CustomBuffer {
         }
 
         this.offset = 0
+    }
+
+    static readFromFile(path: string): CustomBuffer {
+        let buffer = readFileSync(path)
+        let customBuffer = new CustomBuffer(buffer.length, buffer)
+        return customBuffer
+    }
+
+    writeToFile(path: string) {
+        writeFileSync(path, this.BaseBuffer)
     }
 
     readInt32(): number {

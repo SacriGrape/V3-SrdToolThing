@@ -1,6 +1,7 @@
 import { writeFileSync } from "fs";
 import { Block } from "./Blocks/block";
 import { SrdFile } from "./SrdFile";
+import { CustomBuffer } from "./Utils/CustomBuffer"
 
 var tempExemps: string[] = ["$MSH", "$MAT", "$VTX", "$RSI"]
 
@@ -10,34 +11,15 @@ let pathPrefix = "C:\\Users\\evan6\\Documents\\DRV3-Sharp_overhaul2_Release_2021
 let srdPath = pathPrefix + "model.srd"
 let srdiPath = pathPrefix + "model.srdi"
 let srdvPath = pathPrefix + "model.srdv"
+let srdiData = CustomBuffer.readFromFile(srdiPath)
+let srdvData = CustomBuffer.readFromFile(srdvPath)
 
 var srdFile = new SrdFile
 srdFile.loadFromPath(srdPath, srdiPath, srdvPath)
-//readSaveChildren(srdFile.blocks, "$RSI")
-let rsiBlocks = getBlocksOfType(srdFile.blocks, filterType)
-let rsiBlocksClone = cloneBlockArray(rsiBlocks)
-readSaveChildren(srdFile.blocks, filterType)
-updateSizes(rsiBlocks)
-compareSizes(rsiBlocks, rsiBlocksClone, filterType)
-//readSaveChildren(srdFile.blocks, "$RSI")
-var data = srdFile.writeBlocks(srdiPath, srdvPath)
-writeFileSync("model.srd", data.srdData.BaseBuffer)
+var data = srdFile.writeBlocks(srdiData, srdvData)
+writeFileSync("model.srd", data.blockData.BaseBuffer)
 writeFileSync("model.srdi", data.srdiData.BaseBuffer)
 writeFileSync("model.srdv", data.srdvData.BaseBuffer)
-
-
-function readSaveChildren(Children: Block[], filterType: string) {
-    for (let child of Children) {
-        if (child.Children.length > 0) {
-            readSaveChildren(child.Children, filterType)
-        }
-
-        if (child.BlockType == filterType) {
-            child.SaveInfo(`${filterType}${fileNumber}`)
-            fileNumber++
-        }
-     }
-}
 
 function cloneBlockArray(blocks: Block[]): Block[] {
     let clonedBlocks: Block[] = []

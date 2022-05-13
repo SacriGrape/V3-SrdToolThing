@@ -52,7 +52,7 @@ export class MatBlock extends Block {
         this.UnknownStrings = [unknownString1, unknownString2]
     }
 
-    Serialize(srdi: string, srdv: string): CustomBuffer {
+    Serialize(srdiData: CustomBuffer, srdvData: CustomBuffer): {blockData: CustomBuffer, srdiData: CustomBuffer, srdvData: CustomBuffer} {
         this.UpdateSize()
         var data = new CustomBuffer(this.DataSize)
         data.writeInt32(this.Unknown10)
@@ -108,7 +108,7 @@ export class MatBlock extends Block {
         if (data.BaseBuffer.length == 55) {
             writeFileSync("testMat.bin", data.BaseBuffer)
         }
-        return data
+        return {blockData: data, srdiData: srdiData, srdvData: srdvData}
     }
 
     UpdateSize() {

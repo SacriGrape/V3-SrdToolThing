@@ -1,174 +1,79 @@
-import {readFile, readFileSync, writeFile, writeFileSync} from 'fs'
-import { CfhBlock } from './Blocks/CfhBlock'
-import { Ct0Block } from './Blocks/Ct0Block'
+import { readFileSync } from 'fs'
 import { CustomBuffer } from './Utils/CustomBuffer'
-import { RsfBlock } from './Blocks/RsfBlock'
-import { RsiBlock } from './Blocks/RsiBlock'
-import { ScnBlock } from './Blocks/ScnBlock'
-import { TxiBlock } from './Blocks/TxiBlock'
-import { TxrBlock } from './Blocks/TxrBlock'
-import { VtxBlock } from './Blocks/VtxBlock'
-import { MshBlock } from './Blocks/MshBlock'
-import { TreBlock } from './Blocks/TreBlock'
-import { MatBlock } from './Blocks/MatBlock'
 import { Block } from './Blocks/block'
-
-var tempExemps: string[] = ["$MSH", "$MAT", "$VTX", "$RSI"]
 
 export class SrdFile {
     blocks: any[] = []
-    writingInfo: any[] = []
-    size: number = 0
-    srdiOffset: number
-    srdvOffset: number
 
     loadFromPath(path: string, srdiPath: string, srdvPath: string) {
         var buffer = readFileSync(path)
         var data = new CustomBuffer(buffer.length, buffer)
-        this.size = buffer.length
         this.blocks = this.readBlocks(data, srdiPath, srdvPath)
     }
 
-    readBlocks(data: CustomBuffer, srdiPath: string, srdvPath: string): any[] {
+    readBlocks(data: CustomBuffer, srdiPath: string, srdvPath: string): Block[] {
         let blocks: Block[] = []
-        while (data.offset < data.BaseBuffer.length) {
-            var BlockType = data.readArrayAsString(4)
-            var blockSize = data.readInt32BE()
-            var subdataSize = data.readInt32BE()
-            var unknown0C = data.readInt32BE()
+        while (data.offset != data.BaseBuffer.length) {
+            // Gathering block data from SrdFile
+            let block = new Block()
+            block.BlockType = data.readArrayAsString(4)
+            block.DataSize = data.readInt32BE()
+            block.SubDataSize = data.readInt32BE()
+            block.Unknown0C = data.readInt32BE()
+            let blockData = data.readBuffer(block.DataSize)
+            data.readPadding(16)
+            let blockSubData = data.readBuffer(block.SubDataSize)
+            data.readPadding(16)
 
-            var block
-            if (!tempExemps.includes(BlockType)) {
-                block = new Block()
-                block.BlockType = BlockType
-                block.Unknown0C = unknown0C
-                block.Data = data.readBuffer(blockSize)
-                data.readPadding(16)
-                var subData = data.readBuffer(subdataSize)
-                block.Children = this.readBlocks(subData, srdiPath, srdvPath)
-                block.SubData = subData
-                data.readPadding(16)
-                block.DataSize = blockSize
-                block.SubDataSize = subdataSize
-                blocks.push(block)
-                continue
-            }
-            var block;
-            switch (BlockType) {
-                case "$MAT":
-                    block = new MatBlock
-                    break
-                case "$MSH":
-                    block = new MshBlock
-                    break
-                case "$VTX":
-                    block = new VtxBlock
-                    break
-                case "$RSI":
-                    block = new RsiBlock
-                    break
-            }
-            block.BlockType = BlockType
-            block.Unknown0C = unknown0C
-            var blockData = data.readBuffer(blockSize)
+            // Handling block data
             block.Deserialize(blockData, srdiPath, srdvPath)
-            data.readPadding(16)
-            var subData = data.readBuffer(subdataSize)
-            block.Children = this.readBlocks(subData, srdiPath, srdvPath)
-            data.readPadding(16)
-            block.DataSize = blockSize
-            block.SubDataSize = subdataSize
+            if (block.SubDataSize != 0) { // Checking if block has kids then saving them
+                block.Children = this.readBlocks(blockSubData, srdiPath, srdvPath)
+            }
+
             blocks.push(block)
-            continue
         }
         return blocks
     }
 
-    writeBlocks(srdiPath: string, srdvPath: string, data?: CustomBuffer, children?: Block[], srdxData?: {srdiData: CustomBuffer, srdvData: CustomBuffer}): {srdData: CustomBuffer, srdiData: CustomBuffer, srdvData: CustomBuffer} {
-        let srdiRawBuffer = readFileSync(srdiPath)
-        let srdvRawBuffer = readFileSync(srdvPath)
-        let srdiData = new CustomBuffer(srdiRawBuffer.length, srdiRawBuffer)
-        let srdvData = new CustomBuffer(srdvRawBuffer.length, srdvRawBuffer)
-        if (srdxData != null) {
-            srdiData = srdxData.srdiData
-            srdvData = srdxData.srdvData
+    writeBlocks(srdiData: CustomBuffer, srdvData: CustomBuffer, blocks?: Block[]): {blockData: CustomBuffer, srdiData: CustomBuffer, srdvData: CustomBuffer} {
+        // Determining what block list to use
+        if (blocks == null) {
+            blocks = this.blocks
         }
 
-        if (data == null) {
-            data = new CustomBuffer(this.getSrdSize())
-        }
+        // Creating the srdData buffer
+        let blockData = new CustomBuffer(this.getBlocksSize(blocks));
 
-        let blocks: any[] = this.blocks
-        if (children != null) {
-            blocks = children
-        }
-        for (var block of blocks) {
-            data.writeArrayAsString(block.BlockType)
-            data.setOffset(data.offset + 8)
-            data.writeInt32BE(block.Unknown0C)
-
-            if (!tempExemps.includes(block.BlockType)) {
-                data.setOffset(data.offset - 12)
-                data.writeInt32BE(block.Data.BaseBuffer.length)
-                let subDataSizeOffset = data.offset
-                data.offset += 4
-                data.setOffset(data.offset + 4)
-                if (block.DataSize != 0) {
-                    data.writeBuffer(block.Data)
-                }
-                data.readPadding(16)
-                let hasSubData = false
-                let subData = null
-                if (block.SubDataSize != 0) {
-                    subData = this.writeBlocks(srdiPath, srdvPath, data, block.Children, {srdiData: srdiData, srdvData: srdvData}).srdData
-                    data.readPadding(16)
-                    hasSubData = true
-                }
-                if (hasSubData) {
-                    let oldPos = data.offset
-                    data.offset = subDataSizeOffset
-                    data.writeInt32BE(subData.BaseBuffer.length)
-                    data.offset = oldPos
-                }
-                data.readPadding(16) // Nothing
-
-                writeFileSync("block.json", JSON.stringify(block, null, 2))
-                continue
+        // Looping over every block
+        for (let block of blocks) {
+            blockData.writeArrayAsString(block.BlockType) // BlockType doesn't have a null terminator so this method is used
+            blockData.writeInt32BE(block.GetDataSize())
+            blockData.writeInt32BE(block.GetSubDataSize())
+            blockData.writeInt32BE(block.Unknown0C) // I just rewrite the value that it was when it was read though this could cause issues once size/data changes if the value is relavent
+            blockData.writeBuffer(block.Serialize(srdiData, srdvData).blockData) // Writes the main block data
+            blockData.readPadding(16)
+            if (block.hasChildren()) {
+                let subData = this.writeBlocks(srdiData, srdvData, block.Children).blockData
+                blockData.writeBuffer(subData)
+                blockData.readPadding(16)
             }
-            let blockData = block.Serialize(srdiData, srdvData)
-            let sizePos = data.offset - 12
-            data.writeBuffer(blockData)
-            data.readPadding(16)
-            let hasSubData = false
-            let subData = null
-            if (block.Children.length != 0) {
-                subData = this.writeBlocks(srdiPath, srdvPath, data, block.Children, {srdiData: srdiData, srdvData: srdvData}).srdData
-                data.readPadding(16)
-                hasSubData = true
-            }
-            let oldPos = data.offset
-            data.setOffset(sizePos)
-            data.writeInt32BE(blockData.length)
-            if (hasSubData) {
-                data.writeInt32BE(subData.length)
-            } else {
-                data.writeInt32BE(0)
-            }
-
-            data.setOffset(oldPos)
         }
-        return {srdData: data, srdiData: srdiData, srdvData: srdvData}
+
+        return {blockData: blockData, srdiData: srdiData, srdvData: srdvData}
     }
 
-    getSrdSize(children?: Block[]): number {
-        let blocks = this.blocks
-        if (children != null) {
-            blocks = children
+    getBlocksSize(blocks?: Block[]): number {
+        // Determining block list
+        if (blocks == null) {
+            blocks = this.blocks
         }
-        var size = 0
-        for (var block of blocks) {
-            size += 16
 
+        var size = 0
+        for (var block of blocks) { // Looping over blocks and adding up their data sizes (making sure to remember to also include padding size)
+            size += 16 // Every block has a 16 byte header
+
+            block.UpdateSize() // Unsafe but shouldn't ever 
             size += block.DataSize
             if (size % 16 != 0) {
                 var remainder = size % 16
@@ -178,7 +83,10 @@ export class SrdFile {
                 }
             }
 
-            size += block.SubDataSize
+            if (block.Children.length != 0) {
+                size += this.getBlocksSize(block.Children)
+            }
+            // Reading padding again probably isn't needed but I want to be as safe as possible
             if (size % 16 != 0) {
                 var remainder = size % 16
                 while (remainder != 0) {
@@ -187,7 +95,6 @@ export class SrdFile {
                 }
             }
         }
-
         return size
     }
 }

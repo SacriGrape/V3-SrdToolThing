@@ -76,7 +76,7 @@ export class VtxBlock extends Block {
         this.Unknownstring = data.readString()
     }
 
-    Serialize(srdiPath: string, srdvPath: string): CustomBuffer {
+    Serialize(srdiData: CustomBuffer, srdvData: CustomBuffer): {blockData: CustomBuffer, srdiData: CustomBuffer, srdvData: CustomBuffer} {
         this.UpdateSize()
         let data = new CustomBuffer(this.DataSize)
 
@@ -152,7 +152,7 @@ export class VtxBlock extends Block {
         }
         
         data.offset = 0;
-        return data
+        return {blockData: data, srdiData: srdiData, srdvData: srdvData}
     }
 
     UpdateSize() {

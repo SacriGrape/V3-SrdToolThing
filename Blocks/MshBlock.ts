@@ -78,7 +78,7 @@ export class MshBlock extends Block {
         this.AlphaLayerString = data.readString()
     }
 
-    Serialize(srdiPath: string, srdvPath: string): CustomBuffer {
+    Serialize(srdiData: CustomBuffer, srdvData: CustomBuffer): {blockData: CustomBuffer, srdiData: CustomBuffer, srdvData: CustomBuffer} {
         var checkedStrs: string[] = []
 
         var re: RegExp = /([A-Z])+([0-9]+)/g
@@ -194,7 +194,7 @@ export class MshBlock extends Block {
         }
 
         data.offset = 0
-        return data
+        return {blockData: data, srdiData: srdiData, srdvData: srdvData}
     }
 
     UpdateSize() {

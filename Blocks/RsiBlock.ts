@@ -36,7 +36,7 @@ export class RsiBlock extends Block {
             }
 
             let info: number[] = []
-            for(let i = 0; i < size; i++) { 
+            for(let j = 0; j < size; j++) { 
                 info.push(data.readInt32())
             }
 
@@ -80,7 +80,7 @@ export class RsiBlock extends Block {
         }
     }
 
-    Serialize(srdiData: CustomBuffer, srdvData: CustomBuffer): CustomBuffer {
+    Serialize(srdiData: CustomBuffer, srdvData: CustomBuffer): {blockData: CustomBuffer, srdiData: CustomBuffer, srdvData: CustomBuffer} {
         this.ResourceData.offset = 0
         this.UpdateSize()
         let data = new CustomBuffer(this.DataSize)
@@ -105,9 +105,9 @@ export class RsiBlock extends Block {
         for (let i = 0; i < this.ResourceInfo.length; i++) {
             let info = this.ResourceInfo[i]
             let externalData = this.ResourceSubData[i]
-            for (let i = 0; i < info.length; i++) {
-                let number = info[i]
-                if (i == 0) {
+            for (let j = 0; j < info.length; j++) {
+                let number = info[j]
+                if (j == 0) {
                     let maskedValues: number = null
                     switch (externalData.Location) {
                         case "SRDI":
@@ -151,7 +151,7 @@ export class RsiBlock extends Block {
         data.offset = oldPos
 
         writeFileSync("RsiTestWrite.dat", data.BaseBuffer)
-        return data
+        return {blockData: data, srdiData: srdiData, srdvData: srdvData}
     }
 
     UpdateSize() {
