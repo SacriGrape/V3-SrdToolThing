@@ -1,6 +1,5 @@
 import { writeFileSync } from "fs"
 import { CustomBuffer } from "../Utils/CustomBuffer"
-import { MapToArray } from "../Utils/MapToArray"
 import { Block } from "./block"
 
 export class MatBlock extends Block {

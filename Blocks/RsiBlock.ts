@@ -1,177 +1,219 @@
 import { info } from "console";
-import { readFileSync, writeFileSync } from "fs"
+import { existsSync, readFileSync, writeFileSync } from "fs"
 import { CustomBuffer } from "../Utils/CustomBuffer";
 import { Block } from "./block";
+
+interface ExternalResourceInfo {
+    address: number
+    length: number
+    Unknown08: number
+    Unknown0C: number
+}
+
+interface ExternalResourceData {
+    location: ResourceDataLocation
+    data: CustomBuffer
+    Unknown08: number
+    Unknown0C: number
+}
+
+interface LocalResourceInfo {
+    nameOffset: number
+    dataOffset: number
+    length: number
+    Unknown0C: number
+}
+
+interface LocalResourceData {
+    name: string
+    data: CustomBuffer
+    Unknown0C: number
+}
+
+enum ResourceDataLocation {
+    Srdi = 0x20000000,
+    Srdv = 0x40000000
+}
 
 export class RsiBlock extends Block {
     UnknownByte00: number
     UnknownByte01: number
     UnknownByte02: number
     UnknownShort0A: number
-    ResourceInfo: number[][] = []
-    ResourceData: CustomBuffer
+    ExternalResourceInfo: ExternalResourceInfo[]
+    ExternalResourceData: ExternalResourceData[]
+    LocalResourceInfo: LocalResourceInfo[]
+    LocalResourceData: LocalResourceData[]
+    UnknownIntList: number[] = []
     ResourceStringList: string[] = []
-    ResourceSubData: {Data: CustomBuffer, Location: "SRDI" | "SRDV" | "SRD", offset?: number}[] = []
-    TempResourceInfoCount: number
 
-    Deserialize(data: CustomBuffer, srdiPath: string, srdvPath: string) {
-        writeFileSync("rsiTestRead.dat", data.BaseBuffer)
-        this.UnknownByte00 = data.readByte()
-        this.UnknownByte01 = data.readByte()
-        this.UnknownByte02 = data.readByte()
-        let fallbackResourceInfoCount = data.readByte()
-        let resourceInfoCount = data.readInt16()
-        let fallbackResourceInfoSize = data.readInt16()
-        let resourceInfoSize = data.readInt16()
-        this.UnknownShort0A = data.readInt16()
-        let resourceStringListOffset = data.readInt32()
-
-        resourceInfoCount = (resourceInfoCount != 0 ? resourceInfoCount : fallbackResourceInfoCount)
-        for (var i = 0; i < resourceInfoCount; i++) {
-            let size = 4
-            if (resourceInfoSize > 0) {
-                size = resourceInfoSize / 4
-            } else if (fallbackResourceInfoSize > 0) {
-                size = fallbackResourceInfoSize / 4
+    Deserialize(blockData: CustomBuffer, srdiPath: string, srdvPath: string) {
+        // Reading the blocks "Header" (Any data that isn't dynamic)
+        this.UnknownByte00 = blockData.readByte()
+        this.UnknownByte01 = blockData.readByte()
+        this.UnknownByte02 = blockData.readByte()
+        let externalResourceCount = blockData.readByte()
+        let localResourceInfoCount = blockData.readInt16()
+        this.UnknownShort0A = blockData.readInt16()
+        let localResourceInfoOffset = blockData.readInt16()
+        let unknownIntListOffset = blockData.readInt16()
+        let resourceStringListOffset = blockData.readInt32()
+        
+        // Reading the external resource info
+        for (let i = 0; i < externalResourceCount; i++) {
+            let externalResourceInfo: ExternalResourceInfo = {
+                address: blockData.readInt32(),
+                length: blockData.readInt32(),
+                Unknown08: blockData.readInt32(),
+                Unknown0C: blockData.readInt32()
             }
-
-            let info: number[] = []
-            for(let j = 0; j < size; j++) { 
-                info.push(data.readInt32())
-            }
-
-            this.ResourceInfo.push(info)
+            this.ExternalResourceInfo.push(externalResourceInfo)
         }
 
-        let dataLength = (resourceStringListOffset - data.offset)
-        this.ResourceData = data.readBuffer(dataLength)
+        // Reading the external resource data
+        for (let info of this.ExternalResourceInfo) {
+            let location: ResourceDataLocation = info.address & 0xF0000000
+            let offset: number = info.address & 0x0FFFFFFF
 
-        data.offset = resourceStringListOffset
-        while(data.offset < data.BaseBuffer.length) {
-            let string = data.readShiftJisString()
-            this.ResourceStringList.push(string)
+            let isSrdi = location == ResourceDataLocation.Srdi
+
+            let path = isSrdi ? srdiPath : srdvPath
+            let data = readDataFromSrdx(path, offset, info.length)
+
+            let externalData: ExternalResourceData = {
+                location: location,
+                data: data,
+                Unknown08: info.Unknown08,
+                Unknown0C: info.Unknown0C
+            }
+
+            this.ExternalResourceData.push(externalData)
         }
 
-        for (let info of this.ResourceInfo) {
-            // CaptainSwag101's work with DRV3-Sharp has helped tremendosly with this code, 
-            // and this part specifically is something I know I would have never figured out without the help from his code, shoutout to him
-            let maskedOffset = info[0] & 0x1FFFFFFF
-            let location = info[0] & ~0x1FFFFFFF
-
-            let data = null
-            let locationString = null
-            switch (location) {
-                case 0x20000000:    // Data is in SRDI
-                    locationString = "SRDI"
-                    data = readDataFromSrdx(srdiPath, maskedOffset, info[1])
-                    break;
-                case 0x40000000: // Data is in SRDV
-                    locationString = "SRDV"
-                    data = readDataFromSrdx(srdvPath, maskedOffset, info[1])
-                    break;
-                case 0x0000000: // Data is in ResourceData (Maybe?)
-                    locationString = "SRD"
-                    this.ResourceData.offset = maskedOffset
-                    data = this.ResourceData.readBuffer(info[1])
-                    this.ResourceSubData.push({Data: data, Location: locationString, offset: maskedOffset})
-                    continue;
+        // Reading local resource info
+        for (let i = 0; i < localResourceInfoCount; i++) {
+            let localResourceInfo: LocalResourceInfo = {
+                nameOffset: blockData.readInt32(),
+                dataOffset: blockData.readInt32(),
+                length: blockData.readInt32(),
+                Unknown0C: blockData.readInt32()
             }
-            this.ResourceSubData.push({Data: data, Location: locationString})
+            this.LocalResourceInfo.push(localResourceInfo)
+        }
+
+        // Reading Local Resource Data
+        for (let info of this.LocalResourceInfo) {
+            // Reading the name of the data
+            blockData.offset = info.nameOffset
+            let name = blockData.readString()
+
+            // Grabbing the data
+            blockData.offset = info.dataOffset
+            let data = blockData.readBuffer(info.length)
+
+            // Creating the local resource data
+            let localResourceData = {
+                name: name,
+                data: data,
+                Unknown0C: info.Unknown0C
+            }
+            this.LocalResourceData.push(localResourceData)
+        }
+
+        // Reading the Unknown Int List
+        if (unknownIntListOffset != 0) {
+            blockData.offset = unknownIntListOffset
+            while (blockData.offset < resourceStringListOffset) {
+                this.UnknownIntList.push(blockData.readInt32())
+            }
+        }
+
+        // Read Resource Strings
+        blockData.offset = resourceStringListOffset
+        while (blockData.offset < blockData.BaseBuffer.length) {
+            this.ResourceStringList.push(blockData.readShiftJisString())
         }
     }
 
     Serialize(srdiData: CustomBuffer, srdvData: CustomBuffer): {blockData: CustomBuffer, srdiData: CustomBuffer, srdvData: CustomBuffer} {
-        this.ResourceData.offset = 0
-        this.UpdateSize()
-        let data = new CustomBuffer(this.DataSize)
-        
-        data.writeByte(this.UnknownByte00)
-        data.writeByte(this.UnknownByte01)
-        data.writeByte(this.UnknownByte02)
-        data.writeByte(0)
-        data.writeInt16(this.ResourceInfo.length)
-        data.writeInt16(0)
-        
-        let size = 0
-        if (this.ResourceInfo.length != 0) {
-            size = this.ResourceInfo[0].length * 4
-        }
-        data.writeInt16(size)
-        
-        data.writeInt16(this.UnknownShort0A)
-        let stringListOffsetOffset = data.offset
-        data.offset += 4 // Int32 Offset (StringList)
+        // Creating buffer
+        let blockData = new CustomBuffer(this.GetSize())
 
-        for (let i = 0; i < this.ResourceInfo.length; i++) {
-            let info = this.ResourceInfo[i]
-            let externalData = this.ResourceSubData[i]
-            for (let j = 0; j < info.length; j++) {
-                let number = info[j]
-                if (j == 0) {
-                    let maskedValues: number = null
-                    switch (externalData.Location) {
-                        case "SRDI":
-                            maskedValues = srdiData.offset | 0x20000000
-                            break;
-                        case "SRDV":
-                            maskedValues = srdvData.offset | 0x40000000
-                            break;
-                        case "SRD":
-                            maskedValues = externalData.offset | 0x00000000
-                            break;
-                    }
-                    data.writeInt32(maskedValues)
-                    continue
-                }
-                data.writeInt32(number)
-            }
+        // Writing the header
+        blockData.writeByte(this.UnknownByte00)
+        blockData.writeByte(this.UnknownByte01)
+        blockData.writeByte(this.UnknownByte02)
+        blockData.writeByte(this.ExternalResourceData.length)
+        blockData.writeInt16(this.LocalResourceData.length)
+        blockData.writeInt16(this.UnknownShort0A)
+        blockData.offset += 8 // Skipping offsets
 
-            // Writing info in SRDX
-            switch (externalData.Location) {
-                case "SRDI":
-                    srdiData.writeBuffer(externalData.Data)
-                    srdiData.readPadding(16)
-                    break;
-                case "SRDV":
-                    srdvData.writeBuffer(externalData.Data)
-                    srdvData.readPadding(16)
-                    break;
-            }
+        // Writing External Resource Info/Data
+        for (let data of this.ExternalResourceData) {
+            // Creating location boolean to make later code prettier
+            let isSrdi = data.location == ResourceDataLocation.Srdi
+            
+            // Figuring out address
+            let offset = isSrdi ? srdiData.offset : srdvData.offset
+            let address = data.location | offset
+            
+            // Writing data into block
+            blockData.writeInt32(address)
+            blockData.writeInt32(data.data.BaseBuffer.length)
+            blockData.writeInt32(data.Unknown08)
+            blockData.writeInt32(data.Unknown0C)
+
+            // Writing data into SRDX
+            isSrdi ? srdiData.writeBuffer(data.data) : srdvData.writeBuffer(data.data)
+            isSrdi ? srdiData.readPadding(16) : srdvData.readPadding(16)
         }
 
-        data.writeBuffer(this.ResourceData)
-        let stringListOffset = data.offset
-        for(let string of this.ResourceStringList) {
-            data.writeShiftJisString(string)
+        // Writing Local Resource Info/Data
+        for (let data of this.LocalResourceData) {
+            blockData += 4
         }
 
-        let oldPos = data.offset
-        data.offset = stringListOffsetOffset
-        data.writeInt32(stringListOffset)
-        data.offset = oldPos
-
-        writeFileSync("RsiTestWrite.dat", data.BaseBuffer)
-        return {blockData: data, srdiData: srdiData, srdvData: srdvData}
+        return {blockData: blockData, srdiData: srdiData, srdvData: srdvData}
     }
 
-    UpdateSize() {
-        this.DataSize = 16
+    GetSize(): number {
+        let size = 16 // Block will always atleast be this much
 
-        if (this.ResourceInfo.length != 0) {
-            this.DataSize += this.ResourceInfo.length * this.ResourceInfo[0].length * 4
+        // External Resource Info Size Contribution
+        size += this.ExternalResourceInfo.length * 16
+
+        // Local Resource Info Size Contribution
+        size += this.LocalResourceInfo.length * 16
+
+        // Local Resource Data Size Contribution
+        for (let data of this.LocalResourceData) {
+            size += data.name.length + 1 // Null terminated string size
+            size += data.data.BaseBuffer.length
         }
 
-        this.DataSize += this.ResourceData.BaseBuffer.length
+        // Unknown Int List size contribution
+        size += this.UnknownIntList.length * 4
+
+        // Resource String List Size Contribution
         for (let string of this.ResourceStringList) {
-            this.DataSize += string.length + 1
+            size += string.length + 1
         }
+        this.DataSize = size
+        return size
     }
 }
 
 function readDataFromSrdx(path: string, offset: number, size: number) {
-    let srdxData: CustomBuffer | Buffer = readFileSync(path)
-    srdxData = new CustomBuffer(srdxData.length, srdxData)
+    // Checking that SRDX is valid
+    let fileExists = existsSync(path)
+    if (!fileExists) throw "ERROR: SRDX file at given path does not exist"
+
+    // Reading the SRDX file
+    let srdxData = CustomBuffer.readFromFile(path)
+
+    // Reading the data from the SRDX file
     srdxData.offset = offset
     let data = srdxData.readBuffer(size)
+
     return data
 }

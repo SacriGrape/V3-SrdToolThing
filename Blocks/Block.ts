@@ -12,14 +12,6 @@ export class Block {
     SubDataSize: number // Updated on same cases
     Data: CustomBuffer
 
-    Deserialize(data, srdiPath, srdvPath) {
-        this.Data = data
-    }
-
-    Serialize(srdiData: CustomBuffer, srdvData: CustomBuffer): {blockData: CustomBuffer, srdiData: CustomBuffer, srdvData: CustomBuffer} {
-        return {blockData: this.Data, srdiData: srdiData, srdvData: srdvData}
-    }
-
     hasChildren(): boolean {
         return this.Children.length != 0
     }

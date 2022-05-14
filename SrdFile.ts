@@ -1,6 +1,18 @@
 import { readFileSync } from 'fs'
 import { CustomBuffer } from './Utils/CustomBuffer'
 import { Block } from './Blocks/block'
+import { tempExemps } from './Utils/globalVars'
+import { CfhBlock } from './Blocks/CfhBlock'
+import { Ct0Block } from './Blocks/Ct0Block'
+import { RsfBlock } from './Blocks/RsfBlock'
+import { RsiBlock } from './Blocks/RsiBlock'
+import { ScnBlock } from './Blocks/ScnBlock'
+import { TxiBlock } from './Blocks/TxiBlock'
+import { TxrBlock } from './Blocks/TxrBlock'
+import { VtxBlock } from './Blocks/VtxBlock'
+import { MshBlock } from './Blocks/MshBlock'
+import { TreBlock } from './Blocks/TreBlock'
+import { MatBlock } from './Blocks/MatBlock'
 
 export class SrdFile {
     blocks: any[] = []
@@ -14,9 +26,50 @@ export class SrdFile {
     readBlocks(data: CustomBuffer, srdiPath: string, srdvPath: string): Block[] {
         let blocks: Block[] = []
         while (data.offset != data.BaseBuffer.length) {
+            // Reading BlockType from SrdFile and creating block
+            let blockType = data.readArrayAsString(4)
+            let block;
+            switch (blockType) {
+                case "$CFH":
+                    block = new CfhBlock()
+                    break;
+                case "$CT0":
+                    block = new Ct0Block()
+                    break;
+                case "$RSF":
+                    block = new RsfBlock()
+                    break;
+                case "$RSI":
+                    block = new RsiBlock()
+                    break;
+                case "$SCN":
+                    block = new ScnBlock()
+                    break;
+                case "$TXI":
+                    block = new TxiBlock()
+                    break;
+                case "$TXR":
+                    block = new TxrBlock()
+                    break;
+                case "$VTX":
+                    block = new VtxBlock()
+                    break;
+                case "$MSH":
+                    block = new MshBlock()
+                    break;
+                case "$TRE":
+                    block = new TreBlock()
+                    break;
+                case "$MAT":
+                    block = new MatBlock()
+                    break;
+                default:
+                    console.log("Unrecognized block type: " + blockType)
+                    break;
+            }
+
             // Gathering block data from SrdFile
-            let block = new Block()
-            block.BlockType = data.readArrayAsString(4)
+            block.BlockType = blockType
             block.DataSize = data.readInt32BE()
             block.SubDataSize = data.readInt32BE()
             block.Unknown0C = data.readInt32BE()
@@ -27,6 +80,7 @@ export class SrdFile {
 
             // Handling block data
             block.Deserialize(blockData, srdiPath, srdvPath)
+
             if (block.SubDataSize != 0) { // Checking if block has kids then saving them
                 block.Children = this.readBlocks(blockSubData, srdiPath, srdvPath)
             }
@@ -46,7 +100,8 @@ export class SrdFile {
         let blockData = new CustomBuffer(this.getBlocksSize(blocks));
 
         // Looping over every block
-        for (let block of blocks) {
+        for (let blockT of blocks) {
+            let block: any = blockT
             blockData.writeArrayAsString(block.BlockType) // BlockType doesn't have a null terminator so this method is used
             blockData.writeInt32BE(block.GetDataSize())
             blockData.writeInt32BE(block.GetSubDataSize())
