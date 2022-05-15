@@ -1,7 +1,10 @@
 import { info } from "console";
 import { existsSync, readFileSync, writeFileSync } from "fs"
 import { CustomBuffer } from "../Utils/CustomBuffer";
+import { handlePadding } from "../Utils/HandlePadding";
 import { Block } from "./block";
+
+let tempBool = true
 
 interface ExternalResourceInfo {
     address: number
@@ -40,10 +43,10 @@ export class RsiBlock extends Block {
     UnknownByte01: number
     UnknownByte02: number
     UnknownShort0A: number
-    ExternalResourceInfo: ExternalResourceInfo[]
-    ExternalResourceData: ExternalResourceData[]
-    LocalResourceInfo: LocalResourceInfo[]
-    LocalResourceData: LocalResourceData[]
+    ExternalResourceInfo: ExternalResourceInfo[] = []
+    ExternalResourceData: ExternalResourceData[] = []
+    LocalResourceInfo: LocalResourceInfo[] = []
+    LocalResourceData: LocalResourceData[] = []
     UnknownIntList: number[] = []
     ResourceStringList: string[] = []
 
@@ -91,9 +94,14 @@ export class RsiBlock extends Block {
         }
 
         // Reading local resource info
+        let smallestNameOffset
         for (let i = 0; i < localResourceInfoCount; i++) {
+            let nameOffset = blockData.readInt32()
+            if (nameOffset < smallestNameOffset || smallestNameOffset == null) {
+                smallestNameOffset = nameOffset
+            }
             let localResourceInfo: LocalResourceInfo = {
-                nameOffset: blockData.readInt32(),
+                nameOffset: nameOffset,
                 dataOffset: blockData.readInt32(),
                 length: blockData.readInt32(),
                 Unknown0C: blockData.readInt32()
@@ -129,15 +137,19 @@ export class RsiBlock extends Block {
         }
 
         // Read Resource Strings
+        if (smallestNameOffset == null) {
+            smallestNameOffset = blockData.BaseBuffer.length
+        }
         blockData.offset = resourceStringListOffset
-        while (blockData.offset < blockData.BaseBuffer.length) {
+        while (blockData.offset < smallestNameOffset) {
             this.ResourceStringList.push(blockData.readShiftJisString())
         }
     }
 
     Serialize(srdiData: CustomBuffer, srdvData: CustomBuffer): {blockData: CustomBuffer, srdiData: CustomBuffer, srdvData: CustomBuffer} {
-        // Creating buffer
+        // Creating buffers
         let blockData = new CustomBuffer(this.GetSize())
+        let localResourceData = new CustomBuffer(this.GetLocalDataSize())
 
         // Writing the header
         blockData.writeByte(this.UnknownByte00)
@@ -167,13 +179,87 @@ export class RsiBlock extends Block {
             isSrdi ? srdiData.writeBuffer(data.data) : srdvData.writeBuffer(data.data)
             isSrdi ? srdiData.readPadding(16) : srdvData.readPadding(16)
         }
-
         // Writing Local Resource Info/Data
+        let localResourceInfoOffset = blockData.offset
+        let nameOffsetOffsets = []
         for (let data of this.LocalResourceData) {
-            blockData += 4
+            // Writing Resource Info
+            nameOffsetOffsets.push(blockData.offset)
+            blockData.offset += 4
+            let dataOffsetOffset = blockData.offset
+            blockData.offset += 4
+            blockData.writeInt32(data.data.BaseBuffer.length)
+            blockData.writeInt32(data.Unknown0C)
+
+            // Writing Resource Data Into Buffer
+            let localDataOffset = localResourceData.offset
+            localResourceData.writeBuffer(data.data)
+            if (this.LocalResourceData.length > this.LocalResourceData.indexOf(data) + 1) {
+                localResourceData.readPadding(16)
+            }
+
+            // Writing data offset
+            let oldPos = blockData.offset
+            blockData.offset = dataOffsetOffset
+            blockData.writeInt32(localDataOffset + (this.LocalResourceData.length * 16) + localResourceInfoOffset)
+            blockData.offset = oldPos
+        }
+        blockData.writeBuffer(localResourceData)
+
+        // Writing Unknown Int List if it exists
+        let unknownIntListOffset = 0
+        if (this.UnknownIntList.length != 0) {
+            unknownIntListOffset = blockData.offset
+            for (let int of this.UnknownIntList) {
+                blockData.writeInt32(int)
+            }
         }
 
+        // Writing the Resource Strings
+        let resourceStringListOffset = blockData.offset
+        for (let string of this.ResourceStringList) {
+            blockData.writeString(string)
+        }
+
+        // Writing the Name strings and their offsets back in the data list
+        for (let i = 0; i < this.LocalResourceData.length; i++) {
+            let data = this.LocalResourceData[i]
+            let nameOffset = blockData.offset
+            let nameOffsetOffset = nameOffsetOffsets[i]
+            
+            blockData.writeString(data.name)
+
+            let oldPos = blockData.offset
+            blockData.offset = nameOffsetOffset
+            blockData.writeInt32(nameOffset)
+            blockData.offset = oldPos
+        }
+
+        let oldPos = blockData.offset
+        blockData.offset = 8
+        blockData.writeInt16(localResourceInfoOffset)
+        blockData.writeInt16(unknownIntListOffset)
+        blockData.writeInt32(resourceStringListOffset)
+        blockData.offset = oldPos
+
+        if (tempBool) {
+            writeFileSync("TESTDATA.bin", blockData.BaseBuffer)
+            tempBool = false
+        }
         return {blockData: blockData, srdiData: srdiData, srdvData: srdvData}
+    }
+
+    GetLocalDataSize(): number {
+        let size = 0;
+        for (let i = 0; i < this.LocalResourceData.length; i++) {
+            let data = this.LocalResourceData[i]
+            size += data.data.BaseBuffer.length
+            if (i + 1 != this.LocalResourceData.length) {
+                size = handlePadding(size)
+            }
+        }
+
+        return size
     }
 
     GetSize(): number {
@@ -185,11 +271,13 @@ export class RsiBlock extends Block {
         // Local Resource Info Size Contribution
         size += this.LocalResourceInfo.length * 16
 
-        // Local Resource Data Size Contribution
+        // Local Resource Data Name Contribution
         for (let data of this.LocalResourceData) {
             size += data.name.length + 1 // Null terminated string size
-            size += data.data.BaseBuffer.length
         }
+
+        // Local Resource Data Contribution
+        size += this.GetLocalDataSize()
 
         // Unknown Int List size contribution
         size += this.UnknownIntList.length * 4

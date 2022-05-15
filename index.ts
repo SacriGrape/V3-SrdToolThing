@@ -1,5 +1,6 @@
 import { writeFileSync } from "fs";
 import { Block } from "./Blocks/block";
+import { RsiBlock } from "./Blocks/RsiBlock";
 import { SrdFile } from "./SrdFile";
 import { CustomBuffer } from "./Utils/CustomBuffer"
 
@@ -16,10 +17,15 @@ let srdvData = CustomBuffer.readFromFile(srdvPath)
 
 var srdFile = new SrdFile
 srdFile.loadFromPath(srdPath, srdiPath, srdvPath)
-var data = srdFile.writeBlocks(srdiData, srdvData)
-writeFileSync("model.srd", data.blockData.BaseBuffer)
-writeFileSync("model.srdi", data.srdiData.BaseBuffer)
-writeFileSync("model.srdv", data.srdvData.BaseBuffer)
+let rsiBlocks = getBlocksOfType(srdFile.blocks, "$RSI")
+for (let i = 0; i < rsiBlocks.length; i++) {
+    let block: RsiBlock = rsiBlocks[i] as RsiBlock
+    writeFileSync(`rsi${i}.dat`, block.Serialize(srdiData, srdvData).blockData.BaseBuffer)
+}
+//var data = srdFile.writeBlocks(srdiData, srdvData)
+//writeFileSync("model.srd", data.blockData.BaseBuffer)
+//writeFileSync("model.srdi", data.srdiData.BaseBuffer)
+//writeFileSync("model.srdv", data.srdvData.BaseBuffer)
 
 function cloneBlockArray(blocks: Block[]): Block[] {
     let clonedBlocks: Block[] = []
